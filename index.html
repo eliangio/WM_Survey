@@ -1,8 +1,63 @@
-// 1. Get the kiosk name from the web address (URL)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Survey Kiosk</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+    }
+    #qrcode {
+      margin: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      min-height: 250px;
+      min-width: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #004494;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Scan to take the survey!</h1>
+  
+  <div id="qrcode">Loading...</div>
+  
+  <button onclick="fetchNewLink()">Generate New QR Code</button>
+
+  <script>
+    // 1. Get the kiosk name from the web address (URL)
     const urlParams = new URLSearchParams(window.location.search);
     const kioskName = urlParams.get('kiosk') || 'Kiosk_A'; 
 
-    // 2. PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+    // 2. Your specific Google Apps Script URL
     const BASE_API_URL = "https://script.google.com/macros/s/AKfycby6WXi33gxt6NEtTM7Qz1pCZWDULYi4I-7hU9ezAmrFDlSYYJE3pKkPJsiPdrEfrSFQ/exec"; 
     
     // 3. Attach the kiosk name so Google knows which tab to look at
@@ -19,7 +74,8 @@
         let data = await response.json();
 
         if (data.status === "success") {
-          qrContainer.innerHTML = ""; 
+          qrContainer.innerHTML = ""; // Clear the text
+          // Generate the new QR Code
           qrCodeInstance = new QRCode(qrContainer, {
             text: data.link,
             width: 250,
@@ -34,4 +90,9 @@
       }
     }
 
+    // Automatically load the first QR code when the page opens
     window.onload = fetchNewLink;
+  </script>
+
+</body>
+</html>
