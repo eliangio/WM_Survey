@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Survey Kiosk</title>
+  <title>Kiosko de Encuesta</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     body {
@@ -15,6 +15,13 @@
       font-family: sans-serif;
       background-color: #f4f4f9;
       margin: 0;
+      text-align: center;
+    }
+    /* Estilos para los contenedores (Screens) */
+    .screen {
+      display: none; /* Oculto por defecto */
+      flex-direction: column;
+      align-items: center;
     }
     #qrcode {
       margin: 20px;
@@ -27,7 +34,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
     }
     button {
       padding: 15px 30px;
@@ -37,45 +43,79 @@
       color: white;
       border: none;
       border-radius: 5px;
-      margin-top: 20px;
+      margin: 10px;
+      width: 250px;
     }
     button:hover {
       background-color: #004494;
+    }
+    .titulo {
+      color: #333;
+      margin-bottom: 5px;
+    }
+    .subtitulo {
+      color: #666;
+      margin-bottom: 30px;
+      font-weight: normal;
     }
   </style>
 </head>
 <body>
 
-  <h1>Scan to take the survey!</h1>
-  
-  <div id="qrcode">Loading...</div>
-  
-  <button onclick="fetchNewLink()">Generate New QR Code</button>
+  <div id="pantalla-inicio" class="screen">
+    <h1 class="titulo">¡Bienvenido a la encuesta!</h1>
+    <h2 class="subtitulo">Selecciona tu entidad</h2>
+    
+    <button onclick="seleccionarEntidad('Kiosk_A')">Entidad A</button>
+    <button onclick="seleccionarEntidad('Kiosk_B')">Entidad B</button>
+    <button onclick="seleccionarEntidad('Kiosk_C')">Entidad C</button>
+  </div>
+
+  <div id="pantalla-qr" class="screen">
+    <h1 class="titulo">¡Escanea para participar!</h1>
+    <div id="qrcode">Cargando...</div>
+    <button onclick="fetchNewLink()">Generar Nuevo Código QR</button>
+  </div>
 
   <script>
-    // 1. Get the kiosk name from the web address (URL)
+    // 1. Mirar si la URL ya tiene una entidad seleccionada
     const urlParams = new URLSearchParams(window.location.search);
-    const kioskName = urlParams.get('kiosk') || 'Kiosk_A'; 
+    const kioskName = urlParams.get('kiosk');
 
-    // 2. Your specific Google Apps Script URL
-    const BASE_API_URL = "https://script.google.com/macros/s/AKfycbzpiAZHXNPgA5mz57pJaQ3u9hlFVKBPP5qG1oeM1_XWCkiD3bkwf9-E-Jhio71P59KHSw/exec"; 
+    // 2. PEGA TU URL DE GOOGLE APPS SCRIPT AQUÍ
+    const BASE_API_URL = "https://script.google.com/macros/s/AKfycby6WXi33gxt6NEtTM7Qz1pCZWDULYi4I-7hU9ezAmrFDlSYYJE3pKkPJsiPdrEfrSFQ/exec"; 
     
-    // 3. Attach the kiosk name so Google knows which tab to look at
-    const API_URL = BASE_API_URL + "?kiosk=" + kioskName;
-
     let qrCodeInstance = null;
 
+    // Lógica para decidir qué pantalla mostrar al cargar
+    if (!kioskName) {
+      // Si no hay kiosko en la URL, mostrar el menú
+      document.getElementById("pantalla-inicio").style.display = "flex";
+    } else {
+      // Si ya hay kiosko, mostrar la pantalla del QR y buscar el link
+      document.getElementById("pantalla-qr").style.display = "flex";
+      fetchNewLink();
+    }
+
+    // Función que se activa al pulsar un botón de entidad
+    function seleccionarEntidad(nombreEntidad) {
+      // Recarga la página añadiendo el kiosko a la URL
+      window.location.href = "?kiosk=" + nombreEntidad;
+    }
+
+    // Función para buscar el link en Google Sheets
     async function fetchNewLink() {
       const qrContainer = document.getElementById("qrcode");
-      qrContainer.innerHTML = "Fetching new link for " + kioskName + "...";
+      qrContainer.innerHTML = "Buscando enlace para " + kioskName + "...";
       
+      const API_URL = BASE_API_URL + "?kiosk=" + kioskName;
+
       try {
         let response = await fetch(API_URL);
         let data = await response.json();
 
         if (data.status === "success") {
-          qrContainer.innerHTML = ""; // Clear the text
-          // Generate the new QR Code
+          qrContainer.innerHTML = ""; // Limpiar el texto
           qrCodeInstance = new QRCode(qrContainer, {
             text: data.link,
             width: 250,
@@ -85,13 +125,10 @@
           qrContainer.innerHTML = "<h3>" + data.message + "</h3>"; 
         }
       } catch (error) {
-        qrContainer.innerHTML = "<h3>Error loading link. Please try again.</h3>";
+        qrContainer.innerHTML = "<h3>Error al cargar. Por favor, intenta de nuevo.</h3>";
         console.error("Error:", error);
       }
     }
-
-    // Automatically load the first QR code when the page opens
-    window.onload = fetchNewLink;
   </script>
 
 </body>
