@@ -1,0 +1,37 @@
+// 1. Get the kiosk name from the web address (URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    const kioskName = urlParams.get('kiosk') || 'Kiosk_A'; 
+
+    // 2. PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+    const BASE_API_URL = "YOUR_GOOGLE_WEB_APP_URL_HERE"; 
+    
+    // 3. Attach the kiosk name so Google knows which tab to look at
+    const API_URL = BASE_API_URL + "?kiosk=" + kioskName;
+
+    let qrCodeInstance = null;
+
+    async function fetchNewLink() {
+      const qrContainer = document.getElementById("qrcode");
+      qrContainer.innerHTML = "Fetching new link for " + kioskName + "...";
+      
+      try {
+        let response = await fetch(API_URL);
+        let data = await response.json();
+
+        if (data.status === "success") {
+          qrContainer.innerHTML = ""; 
+          qrCodeInstance = new QRCode(qrContainer, {
+            text: data.link,
+            width: 250,
+            height: 250
+          });
+        } else {
+          qrContainer.innerHTML = "<h3>" + data.message + "</h3>"; 
+        }
+      } catch (error) {
+        qrContainer.innerHTML = "<h3>Error loading link. Please try again.</h3>";
+        console.error("Error:", error);
+      }
+    }
+
+    window.onload = fetchNewLink;
